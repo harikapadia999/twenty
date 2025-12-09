@@ -1,22 +1,16 @@
 import { faker } from '@faker-js/faker';
-import { type FieldMetadataType } from 'twenty-shared/types';
 
 import { type FlatFieldMetadata } from 'src/engine/metadata-modules/flat-field-metadata/types/flat-field-metadata.type';
 
-type FlatFieldMetadataOverrides<
-  T extends FieldMetadataType = FieldMetadataType,
-> = Required<
-  Pick<
-    FlatFieldMetadata<T>,
-    'universalIdentifier' | 'objectMetadataId' | 'type'
-  >
+type FlatFieldMetadataOverrides = Required<
+  Pick<FlatFieldMetadata, 'universalIdentifier' | 'objectMetadataId' | 'type'>
 > &
-  Partial<FlatFieldMetadata<T>>;
+  Partial<FlatFieldMetadata>;
 
-export const getFlatFieldMetadataMock = <T extends FieldMetadataType>(
-  overrides: FlatFieldMetadataOverrides<T>,
+export const getFlatFieldMetadataMock = (
+  overrides: FlatFieldMetadataOverrides,
 ): FlatFieldMetadata => {
-  const createdAt = '2024-01-01T00:00:00.000Z' as unknown as Date;
+  const createdAt = '2024-01-01T00:00:00.000Z';
 
   return {
     calendarViewIds: [],
