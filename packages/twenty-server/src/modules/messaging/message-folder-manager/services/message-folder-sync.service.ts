@@ -27,6 +27,7 @@ export class MessageFolderSyncService {
 
   async updateMessageFoldersSyncStatus(
     workspaceId: string,
+    messageChannelId: string,
     messageFolderIds: string[],
     isSynced: boolean,
   ): Promise<void> {
@@ -58,7 +59,7 @@ export class MessageFolderSyncService {
       async (transactionManager: WorkspaceEntityManager) => {
         const foundFolders = await messageFolderRepository.find(
           {
-            where: { id: In(messageFolderIds) },
+            where: { id: In(messageFolderIds), messageChannelId },
           },
           transactionManager,
         );
@@ -77,22 +78,6 @@ export class MessageFolderSyncService {
             },
           );
         }
-
-        const channelIds = [
-          ...new Set(folders.map((folder) => folder.messageChannelId)),
-        ];
-
-        if (channelIds.length !== 1) {
-          throw new WorkspaceQueryRunnerException(
-            'All folders must belong to the same message channel',
-            WorkspaceQueryRunnerExceptionCode.INVALID_QUERY_INPUT,
-            {
-              userFriendlyMessage: msg`All folders must belong to the same message channel`,
-            },
-          );
-        }
-
-        const messageChannelId = channelIds[0];
 
         const messageChannel = await messageChannelRepository.findOne(
           {

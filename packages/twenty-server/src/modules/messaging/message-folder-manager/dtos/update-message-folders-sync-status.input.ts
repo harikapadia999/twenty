@@ -6,6 +6,10 @@ import { UUIDScalarType } from 'src/engine/api/graphql/workspace-schema-builder/
 
 @InputType()
 export class UpdateMessageFoldersSyncStatusInput {
+  @IsUUID('4')
+  @Field(() => UUIDScalarType)
+  messageChannelId: string;
+
   @IsArray()
   @ArrayNotEmpty()
   @IsUUID('4', { each: true })

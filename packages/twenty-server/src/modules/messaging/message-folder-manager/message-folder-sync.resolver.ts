@@ -30,6 +30,7 @@ export class MessageFolderSyncResolver {
   ): Promise<UpdateMessageFoldersSyncStatusSuccessDTO> {
     await this.messageFolderSyncService.updateMessageFoldersSyncStatus(
       workspace.id,
+      input.messageChannelId,
       input.messageFolderIds,
       input.isSynced,
     );
