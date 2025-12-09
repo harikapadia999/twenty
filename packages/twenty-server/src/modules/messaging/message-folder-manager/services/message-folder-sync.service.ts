@@ -57,28 +57,6 @@ export class MessageFolderSyncService {
 
     await workspaceDataSource.transaction(
       async (transactionManager: WorkspaceEntityManager) => {
-        const foundFolders = await messageFolderRepository.find(
-          {
-            where: { id: In(messageFolderIds), messageChannelId },
-          },
-          transactionManager,
-        );
-
-        const folders = foundFolders.filter(isDefined);
-
-        if (folders.length !== messageFolderIds.length) {
-          const foundIds = new Set(folders.map((folder) => folder.id));
-          const missingIds = messageFolderIds.filter((id) => !foundIds.has(id));
-
-          throw new WorkspaceQueryRunnerException(
-            `Message folders not found: ${missingIds.join(', ')}`,
-            WorkspaceQueryRunnerExceptionCode.DATA_NOT_FOUND,
-            {
-              userFriendlyMessage: msg`Some message folders were not found`,
-            },
-          );
-        }
-
         const messageChannel = await messageChannelRepository.findOne(
           {
             where: { id: messageChannelId },
@@ -95,6 +73,13 @@ export class MessageFolderSyncService {
             },
           );
         }
+
+        const folders = await messageFolderRepository.find(
+          {
+            where: { id: In(messageFolderIds), messageChannelId },
+          },
+          transactionManager,
+        );
 
         if (
           !isSynced &&
