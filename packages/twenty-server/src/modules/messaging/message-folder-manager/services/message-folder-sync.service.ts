@@ -16,6 +16,8 @@ import {
   type MessageChannelWorkspaceEntity,
 } from 'src/modules/messaging/common/standard-objects/message-channel.workspace-entity';
 import { type MessageFolderWorkspaceEntity } from 'src/modules/messaging/common/standard-objects/message-folder.workspace-entity';
+import { StandardFolder } from 'src/modules/messaging/message-import-manager/drivers/types/standard-folder';
+import { getStandardFolderByRegex } from 'src/modules/messaging/message-import-manager/drivers/utils/get-standard-folder-by-regex';
 
 @Injectable()
 export class MessageFolderSyncService {
@@ -54,12 +56,14 @@ export class MessageFolderSyncService {
 
     await workspaceDataSource.transaction(
       async (transactionManager: WorkspaceEntityManager) => {
-        const folders = await messageFolderRepository.find(
+        const foundFolders = await messageFolderRepository.find(
           {
             where: { id: In(messageFolderIds) },
           },
           transactionManager,
         );
+
+        const folders = foundFolders.filter(isDefined);
 
         if (folders.length !== messageFolderIds.length) {
           const foundIds = new Set(folders.map((folder) => folder.id));
@@ -133,6 +137,28 @@ export class MessageFolderSyncService {
             isNumber(totalSyncedCount) &&
             remainingSynced < 1
           ) {
+            if (messageFolderIds.length > 1) {
+              const inboxFolder = folders.find(
+                (folder) =>
+                  getStandardFolderByRegex(folder.name!) ===
+                    StandardFolder.INBOX && folder.isSynced,
+              );
+
+              if (inboxFolder) {
+                const foldersToUnsync = messageFolderIds.filter(
+                  (folderId) => folderId !== inboxFolder.id,
+                );
+
+                await messageFolderRepository.update(
+                  { id: In(foldersToUnsync) },
+                  { isSynced: false },
+                  transactionManager,
+                );
+
+                return;
+              }
+            }
+
             throw new WorkspaceQueryRunnerException(
               'Cannot unsync folders: at least one folder must remain synced',
               WorkspaceQueryRunnerExceptionCode.INVALID_QUERY_INPUT,
