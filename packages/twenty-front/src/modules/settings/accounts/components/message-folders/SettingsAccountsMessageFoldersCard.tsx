@@ -126,7 +126,7 @@ export const SettingsAccountsMessageFoldersCard = () => {
       variables: {
         input: {
           messageFolderIds: messageFoldersToToggle.map((folder) => folder.id),
-          messageChannelId: messageChannel?.id,
+          messageChannelId: settingsAccountsSelectedMessageChannel?.id ?? '',
           isSynced: targetSyncState,
         },
       },
