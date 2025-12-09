@@ -1,3 +1,5 @@
+// TODO: UX enhancement when toggling a folder with child folders mark the child folders as synced too
+
 import { Injectable } from '@nestjs/common';
 
 import { msg } from '@lingui/core/macro';
