@@ -1,5 +1,6 @@
 import { type MessageChannel } from '@/accounts/types/MessageChannel';
 import { type MessageFolder } from '@/accounts/types/MessageFolder';
+import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
 import { CoreObjectNameSingular } from '@/object-metadata/types/CoreObjectNameSingular';
 import { useGenerateDepthRecordGqlFieldsFromObject } from '@/object-record/graphql/record-gql-fields/hooks/useGenerateDepthRecordGqlFieldsFromObject';
 import { useFindOneRecord } from '@/object-record/hooks/useFindOneRecord';
@@ -9,6 +10,7 @@ import { SettingsMessageFoldersSkeletonLoader } from '@/settings/accounts/compon
 import { SettingsMessageFoldersTreeItem } from '@/settings/accounts/components/message-folders/SettingsMessageFoldersTreeItem';
 import { computeMessageFolderTree } from '@/settings/accounts/components/message-folders/utils/computeMessageFolderTree';
 import { settingsAccountsSelectedMessageChannelState } from '@/settings/accounts/states/settingsAccountsSelectedMessageChannelState';
+import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { SettingsTextInput } from '@/ui/input/components/SettingsTextInput';
 import { Table } from '@/ui/layout/table/components/Table';
 import { TableCell } from '@/ui/layout/table/components/TableCell';
@@ -19,6 +21,7 @@ import { useRecoilValue } from 'recoil';
 import { Label } from 'twenty-ui/display';
 import { Checkbox, CheckboxSize } from 'twenty-ui/input';
 import { Section } from 'twenty-ui/layout';
+import { useUpdateMessageFoldersSyncStatusMutation } from '~/generated-metadata/graphql';
 
 const StyledTreeList = styled.ul`
   list-style: none;
@@ -67,6 +70,9 @@ export const SettingsAccountsMessageFoldersCard = () => {
   const { t } = useLingui();
   const [search, setSearch] = useState('');
 
+  const apolloCoreClient = useApolloCoreClient();
+  const { enqueueErrorSnackBar } = useSnackBar();
+
   const settingsAccountsSelectedMessageChannel = useRecoilValue(
     settingsAccountsSelectedMessageChannelState,
   );
@@ -74,6 +80,11 @@ export const SettingsAccountsMessageFoldersCard = () => {
   const { updateOneRecord } = useUpdateOneRecord<MessageFolder>({
     objectNameSingular: CoreObjectNameSingular.MessageFolder,
   });
+
+  const [updateMessageFoldersSyncStatus] =
+    useUpdateMessageFoldersSyncStatusMutation({
+      client: apolloCoreClient,
+    });
 
   const { recordGqlFields } = useGenerateDepthRecordGqlFieldsFromObject({
     objectNameSingular: CoreObjectNameSingular.MessageChannel,
@@ -111,12 +122,24 @@ export const SettingsAccountsMessageFoldersCard = () => {
     const allSynced = messageFoldersToToggle.every((folder) => folder.isSynced);
     const targetSyncState = !allSynced;
 
-    for (const folder of messageFoldersToToggle) {
-      await updateOneRecord({
-        idToUpdate: folder.id,
-        updateOneRecordInput: { isSynced: targetSyncState },
-      });
-    }
+    await updateMessageFoldersSyncStatus({
+      variables: {
+        input: {
+          messageFolderIds: messageFoldersToToggle.map((folder) => folder.id),
+          isSynced: targetSyncState,
+        },
+      },
+      onCompleted: async () => {
+        await apolloCoreClient.refetchQueries({
+          include: 'active',
+        });
+      },
+      onError: (error) => {
+        enqueueErrorSnackBar({
+          apolloError: error,
+        });
+      },
+    });
   };
 
   const handleToggleFolder = async (messageFoldersToToggle: MessageFolder) => {
