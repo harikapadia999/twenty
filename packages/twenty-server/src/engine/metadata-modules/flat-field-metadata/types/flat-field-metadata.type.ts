@@ -1,7 +1,7 @@
 import { type FieldMetadataType } from 'twenty-shared/types';
 
 import { type FieldMetadataEntity } from 'src/engine/metadata-modules/field-metadata/field-metadata.entity';
-import { FlatEntityFrom } from 'src/engine/metadata-modules/flat-entity/types/flat-entity.type';
+import { type FlatEntityFrom } from 'src/engine/metadata-modules/flat-entity/types/flat-entity.type';
 
 export const FIELD_METADATA_RELATION_PROPERTIES = [
   'relationTargetFieldMetadata',
