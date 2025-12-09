@@ -4292,6 +4292,7 @@ export type UpdateLabPublicFeatureFlagInput = {
 
 export type UpdateMessageFoldersSyncStatusInput = {
   isSynced: Scalars['Boolean'];
+  messageChannelId: Scalars['UUID'];
   messageFolderIds: Array<Scalars['UUID']>;
 };
 
