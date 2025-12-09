@@ -57,7 +57,6 @@ export class MessageFolderSyncService {
         const folders = await messageFolderRepository.find(
           {
             where: { id: In(messageFolderIds) },
-            lock: { mode: 'pessimistic_write' },
           },
           transactionManager,
         );
@@ -94,7 +93,6 @@ export class MessageFolderSyncService {
         const messageChannel = await messageChannelRepository.findOne(
           {
             where: { id: messageChannelId },
-            lock: { mode: 'pessimistic_write' },
           },
           transactionManager,
         );
